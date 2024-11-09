@@ -1,163 +1,322 @@
 import secrets
 import math
 import json
+import logging
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, getcontext
+from typing import Dict, Tuple, Any, Optional
+from pathlib import Path
+
+# Konfigurasi logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Set presisi desimal tinggi untuk perhitungan metafisika
+getcontext().prec = 50
+
+class BitcoinPriceValidator:
+    """Validator untuk harga Bitcoin minimum"""
+    MIN_PRICE = Decimal('0.05')  # Harga minimum dalam BTC
+    
+    @classmethod
+    def validate_price(cls, price: Decimal) -> bool:
+        """
+        Validasi harga Bitcoin
+        
+        Args:
+            price: Harga dalam BTC
+            
+        Returns:
+            bool: True jika valid, False jika tidak
+        """
+        return price >= cls.MIN_PRICE
+    
+    @classmethod
+    def get_price_error(cls, price: Decimal) -> str:
+        """
+        Mendapatkan pesan error untuk harga tidak valid
+        
+        Args:
+            price: Harga dalam BTC
+            
+        Returns:
+            str: Pesan error
+        """
+        return f"Price must be at least {cls.MIN_PRICE} BTC, got {price} BTC"
+
+class MetaphysicalCore:
+    """Inti sistem metafisika yang menangani aspek fundamental"""
+    
+    PHI = Decimal('1.618033988749894848204586834365638117720309179805762862135')
+    PI = Decimal('3.141592653589793238462643383279502884197169399375105820974')
+    TAU = PI * 2
+    SQRT5 = Decimal('2.236067977499789696409173668731276235440618359611525724270')
+    
+    def __init__(self):
+        self._energy_state = self._initialize_energy_state()
+        self._cycle_phase = Decimal('0')
+        self._harmonic_resonance = self._calculate_harmonic_resonance()
+        logger.info("MetaphysicalCore initialized")
+
+    def _initialize_energy_state(self) -> Decimal:
+        return (self.PHI * self.PI / self.SQRT5) % 1
+
+    def _calculate_harmonic_resonance(self) -> Decimal:
+        return (self.PHI ** 2 + self.PI ** 2) % self.TAU
+
+    @property
+    def energy_state(self) -> Decimal:
+        return self._energy_state
+        
+    @property
+    def cycle_phase(self) -> Decimal:
+        return self._cycle_phase
+
+    def transform_energy(self, value: Decimal) -> Decimal:
+        self._cycle_phase = (self._cycle_phase + self.PHI) % self.TAU
+        transformed = (value * self._energy_state * self._harmonic_resonance) % 1
+        self._energy_state = (self._energy_state + transformed / self.PHI) % 1
+        return transformed
+
+    def get_spiritual_metrics(self) -> Dict[str, Decimal]:
+        return {
+            "energy_state": self._energy_state,
+            "cycle_phase": self._cycle_phase,
+            "harmonic_resonance": self._harmonic_resonance,
+            "phi_pi_ratio": self.PHI / self.PI
+        }
 
 class MetaphysicalConstants:
     """Konstanta Metafisika untuk Bitcoin"""
+    
     def __init__(self):
-        self.BITCOIN_SUPPLY = 21000000
-        self.HALVING_INTERVAL = 210000
-        self.METAPHYSICAL_BYTES = 283  # Transformasi dari 399
-        self.N = 21  # Konstanta dasar Bitcoin
-        self.Z = self.calculate_z_ratio()
-        
-    def calculate_z_ratio(self):
-        """Kalkulasi rasio Z berdasarkan transformasi bytes"""
-        return Decimal('283') / Decimal('399')
-        
-    def calculate_metaphysical_x(self):
-        """
-        Implementasi N²¹/Z untuk nilai X
-        Formula Metafisika: X = (N²¹)/Z mod 1
-        """
-        N_power = Decimal(pow(self.N, 21))  # N²¹
-        X = (N_power / self.Z) % 1
-        return X
+        self.BITCOIN_SUPPLY = Decimal('21000000')
+        self.HALVING_INTERVAL = Decimal('210000')
+        self.METAPHYSICAL_BYTES = 283
+        self.N = Decimal('21')
+        self.core = MetaphysicalCore()
+        self.Z = self._calculate_z_ratio()
+        logger.info("MetaphysicalConstants initialized")
+
+    def _calculate_z_ratio(self) -> Decimal:
+        base_ratio = Decimal('283') / Decimal('399')
+        return base_ratio * self.core.PHI / self.core.PI
+
+    def calculate_metaphysical_x(self) -> Decimal:
+        n_power = pow(self.N, 21)
+        x_base = (n_power * self.core.PHI) / (self.Z * self.core.PI) % 1
+        return self.core.transform_energy(x_base)
+
+    def get_constants_info(self) -> Dict[str, Any]:
+        return {
+            "bitcoin_supply": str(self.BITCOIN_SUPPLY),
+            "halving_interval": str(self.HALVING_INTERVAL),
+            "metaphysical_bytes": self.METAPHYSICAL_BYTES,
+            "n_constant": str(self.N),
+            "z_ratio": str(self.Z),
+            "spiritual_metrics": self.core.get_spiritual_metrics()
+        }
 
 class MetaphysicalAST:
+    """Abstract Spiritual Transform untuk Bitcoin"""
+    
     def __init__(self):
         self.constants = MetaphysicalConstants()
         self.X = self.constants.calculate_metaphysical_x()
+        self.price_validator = BitcoinPriceValidator()
+        logger.info("MetaphysicalAST initialized")
+
+    def generate_metaphysical_key(self, price: Decimal) -> bytes:
+        """
+        Generate kunci dengan validasi harga
         
-    def generate_metaphysical_key(self):
-        """Generate kunci dengan properti metafisika"""
+        Args:
+            price: Harga dalam BTC
+            
+        Returns:
+            bytes: Kunci yang digenerate
+        
+        Raises:
+            ValueError: Jika harga di bawah minimum
+        """
+        if not self.price_validator.validate_price(price):
+            raise ValueError(self.price_validator.get_price_error(price))
+            
         base_entropy = secrets.token_bytes(self.constants.METAPHYSICAL_BYTES)
-        return self.apply_metaphysical_properties(base_entropy)
-        
-    def apply_metaphysical_properties(self, data):
-        """Terapkan properti metafisika ke data"""
+        return self._apply_metaphysical_properties(base_entropy)
+
+    def _apply_metaphysical_properties(self, data: bytes) -> bytes:
         result = bytearray()
+        phi_influence = int(self.constants.core.PHI * 255) & 0xFF
+        pi_influence = int(self.constants.core.PI * 255) & 0xFF
+        
         for i, byte in enumerate(data):
-            # Integrasi X dari N²¹/Z
-            metaphysical_factor = int(self.X * 255) & 0xFF
-            
-            # Pengaruh Bitcoin halving
-            halving_influence = int((i % self.constants.HALVING_INTERVAL) / 
-                                  self.constants.HALVING_INTERVAL * 255) & 0xFF
-            
-            # Supply influence
-            supply_factor = int((byte * self.constants.BITCOIN_SUPPLY) % 255)
-            
-            transformed_byte = (byte + metaphysical_factor + 
-                              halving_influence + supply_factor) % 256
+            metaphysical_factor = int(self.X * phi_influence) & 0xFF
+            halving_cycle = (i % int(self.constants.HALVING_INTERVAL)) / int(self.constants.HALVING_INTERVAL)
+            halving_influence = int(halving_cycle * pi_influence) & 0xFF
+            supply_factor = int((byte * float(self.constants.BITCOIN_SUPPLY) * float(self.constants.core.PHI)) % 255)
+            transformed_byte = (byte + metaphysical_factor + halving_influence + supply_factor) % 256
             result.append(transformed_byte)
+            
         return bytes(result)
 
 class BitcoinMetaphysicalSystem:
-    def __init__(self):
+    """Sistem Metafisika Bitcoin yang Terintegrasi"""
+    
+    def __init__(self, output_dir: Optional[str] = None):
         self.ast = MetaphysicalAST()
         self.btc_address = "1LVW6zyMk88KDBn9qLAkPuTtFbDeErmpdp"
-        self.contributions = {}
+        self.contributions: Dict[str, Dict[str, Any]] = {}
+        self.output_dir = Path(output_dir) if output_dir else Path.cwd() / "output"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"BitcoinMetaphysicalSystem initialized: {self.output_dir}")
+
+    def generate_contribution(self, price: Decimal, metadata: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        """
+        Generate kontribusi baru dengan validasi harga
         
-    def generate_contribution(self, metadata):
-        """Generate kontribusi baru dengan metadata"""
-        key = self.ast.generate_metaphysical_key()
+        Args:
+            price: Harga dalam BTC
+            metadata: Metadata kontribusi
+            
+        Returns:
+            Tuple[str, Dict[str, Any]]: Key dan data kontribusi
+        """
+        key = self.ast.generate_metaphysical_key(price)
         timestamp = datetime.now().isoformat()
+        
+        spiritual_metrics = self.ast.constants.core.get_spiritual_metrics()
         
         contribution = {
             "timestamp": timestamp,
+            "price_btc": str(price),
             "metaphysical_x": str(self.ast.X),
+            "spiritual_metrics": {k: str(v) for k, v in spiritual_metrics.items()},
             "n21_z_ratio": str(self.ast.constants.N ** 21 / self.ast.constants.Z),
             "bitcoin_address": self.btc_address,
             "metadata": metadata,
-            "constants": {
-                "N": self.ast.constants.N,
-                "Z": str(self.ast.constants.Z),
-                "METAPHYSICAL_BYTES": self.ast.constants.METAPHYSICAL_BYTES,
-                "HALVING_INTERVAL": self.ast.constants.HALVING_INTERVAL,
-                "TOTAL_SUPPLY": self.ast.constants.BITCOIN_SUPPLY
-            }
+            "constants": self.ast.constants.get_constants_info()
         }
         
         self.contributions[key.hex()] = contribution
+        logger.info(f"Generated contribution: {key.hex()[:8]}... Price: {price} BTC")
         return key.hex(), contribution
 
-    def export_for_sharing(self, filename):
-        """Export sistem untuk dibagikan ke komunitas Bitcoin"""
+    def export_for_sharing(self, filename: Optional[str] = None) -> Dict[str, Any]:
+        if filename is None:
+            filename = f"bitcoin_metaphysical_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        filepath = self.output_dir / filename
+        
         sharing_data = {
-            "system_name": "Metaphysical AST Bitcoin Integration",
+            "system_name": "Enhanced Metaphysical AST Bitcoin Integration",
+            "version": "2.0.0",
+            "timestamp": datetime.now().isoformat(),
             "description": """
-            Implementation of Metaphysical AST system for Bitcoin
-            Using N²¹/Z transformation for X value calculation
-            Incorporating Bitcoin supply and halving mechanics
-            Original 399 bytes transformed to 283 bytes
+            Enhanced Metaphysical AST system with minimum price validation
+            Incorporating Sacred Geometry and Price Thresholds
+            Dynamic energy state tracking and transformation
             """,
+            "price_requirements": {
+                "minimum_btc": str(BitcoinPriceValidator.MIN_PRICE)
+            },
             "mathematical_basis": {
-                "core_formula": "X = (N²¹)/Z mod 1",
-                "N": self.ast.constants.N,
-                "Z_ratio": str(self.ast.constants.Z),
-                "current_X": str(self.ast.X)
+                "core_formula": "X = (N²¹ * φ)/(Z * π) mod 1",
+                "constants": self.ast.constants.get_constants_info(),
+                "current_state": self.ast.constants.core.get_spiritual_metrics()
             },
             "bitcoin_integration": {
-                "total_supply": self.ast.constants.BITCOIN_SUPPLY,
-                "halving_interval": self.ast.constants.HALVING_INTERVAL,
+                "total_supply": str(self.ast.constants.BITCOIN_SUPPLY),
+                "halving_interval": str(self.ast.constants.HALVING_INTERVAL),
                 "contribution_address": self.btc_address
-            },
-            "metaphysical_properties": {
-                "byte_transformation": self.ast.constants.METAPHYSICAL_BYTES,
-                "x_calculation": str(self.ast.constants.calculate_metaphysical_x())
             },
             "contributions": self.contributions
         }
         
-        with open(filename, 'w') as f:
-            json.dump(sharing_data, f, indent=4)
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(sharing_data, f, indent=4, ensure_ascii=False)
+            
+        logger.info(f"System exported: {filepath}")
         return sharing_data
 
+    def display_system_status(self) -> None:
+        metrics = self.ast.constants.core.get_spiritual_metrics()
+        print("\n=== System Status ===")
+        print(f"Minimum Price: {BitcoinPriceValidator.MIN_PRICE} BTC")
+        print(f"Current X Value: {self.ast.X}")
+        print("\nSpiritual Metrics:")
+        for key, value in metrics.items():
+            print(f"  {key}: {value}")
+        print("\nConstants:")
+        for key, value in self.ast.constants.get_constants_info().items():
+            if key != "spiritual_metrics":
+                print(f"  {key}: {value}")
+
 def main():
-    system = BitcoinMetaphysicalSystem()
-    
-    while True:
-        print("\n=== Bitcoin Metaphysical AST System ===")
-        print("1. Generate New Metaphysical Contribution")
-        print("2. Export System for Sharing")
-        print("3. View Current X Value")
-        print("4. View Mathematical Constants")
-        print("5. Exit")
+    """Fungsi utama untuk menjalankan sistem"""
+    try:
+        system = BitcoinMetaphysicalSystem()
+        logger.info("Starting Bitcoin Metaphysical System")
         
-        choice = input("\nSelect option (1-5): ")
-        
-        if choice == '1':
-            metadata = {
-                "contributor_note": input("Enter contributor note: "),
-                "timestamp": datetime.now().isoformat()
-            }
-            key, data = system.generate_contribution(metadata)
-            print(f"\nContribution Key: {key}")
-            print(f"Metaphysical X: {data['metaphysical_x']}")
-            print(f"N²¹/Z Ratio: {data['n21_z_ratio']}")
+        while True:
+            print("\n=== Enhanced Bitcoin Metaphysical AST System ===")
+            print(f"Minimum Price: {BitcoinPriceValidator.MIN_PRICE} BTC")
+            print("1. Generate New Metaphysical Contribution")
+            print("2. Export System for Sharing")
+            print("3. View Current System Status")
+            print("4. Exit")
             
-        elif choice == '2':
-            filename = f"bitcoin_metaphysical_ast_{datetime.now().strftime('%Y%m%d')}.json"
-            data = system.export_for_sharing(filename)
-            print(f"\nSystem exported to {filename}")
-            print("Ready for sharing on Github/Twitter")
-            
-        elif choice == '3':
-            print(f"\nCurrent X Value: {system.ast.X}")
-            print(f"Derived from N²¹/Z: {system.ast.constants.N ** 21 / system.ast.constants.Z}")
-            
-        elif choice == '4':
-            print("\nMathematical Constants:")
-            print(f"N: {system.ast.constants.N}")
-            print(f"Z Ratio: {system.ast.constants.Z}")
-            print(f"Metaphysical Bytes: {system.ast.constants.METAPHYSICAL_BYTES}")
-            
-        elif choice == '5':
-            print("\nExiting system...")
-            break
+            try:
+                choice = input("\nSelect option (1-4): ").strip()
+                
+                if choice == '1':
+                    try:
+                        price = Decimal(input(f"Enter BTC price (min {BitcoinPriceValidator.MIN_PRICE} BTC): ").strip())
+                        metadata = {
+                            "contributor_note": input("Enter contributor note: ").strip(),
+                            "spiritual_intention": input("Enter spiritual intention: ").strip(),
+                            "timestamp": datetime.now().isoformat()
+                        }
+                        key, data = system.generate_contribution(price, metadata)
+                        print(f"\nContribution generated successfully!")
+                        print(f"Key: {key[:8]}...")
+                        print(f"Price: {data['price_btc']} BTC")
+                        print(f"Metaphysical X: {data['metaphysical_x']}")
+                        print("Spiritual Metrics:")
+                        for k, v in data['spiritual_metrics'].items():
+                            print(f"  {k}: {v}")
+                    except ValueError as e:
+                        print(f"\nError: {str(e)}")
+                    
+                elif choice == '2':
+                    filename = input("Enter filename (or press Enter for default): ").strip()
+                    filename = filename if filename else None
+                    system.export_for_sharing(filename)
+                    print("\nSystem exported successfully!")
+                    
+                elif choice == '3':
+                    system.display_system_status()
+                    
+                elif choice == '4':
+                    print("\nClosing metaphysical connection...")
+                    logger.info("System shutdown initiated by user")
+                    break
+                    
+                else:
+                    print("\nInvalid option. Please try again.")
+                    
+            except Exception as e:
+                logger.error(f"Error processing option: {str(e)}")
+                print(f"\nError: {str(e)}")
+                print("Please try again.")
+                
+    except Exception as e:
+        logger.critical(f"Critical system error: {str(e)}")
+        print(f"\nCritical Error: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main()
